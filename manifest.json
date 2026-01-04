@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Discord Automação Exemplo",
+  "version": "1.0.0",
+  "description": "Extensão de exemplo para ler mensagens no Discord Web.",
+  "permissions": [],
+  "host_permissions": [
+    "https://discord.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://discord.com/*"],
+      "js": [
+        "src/config.js",
+        "src/state.js",
+        "src/utils.js",
+        "src/core/clock.js",
+        "src/core/claim.js",
+        "src/core/policies.js",
+        "src/core/roll-session.js",
+        "src/core/rolls-reset.js",
+        "src/core/reaction.js",
+        "src/core/tu.js",
+        "src/adapters/discord-parser.js",
+        "src/adapters/discord-actions.js",
+        "src/adapters/discord-observer.js",
+        "src/bootstrap.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
