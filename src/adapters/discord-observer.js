@@ -35,26 +35,25 @@
         const reacaoPorIcone = parser.detectReactionByIcon(descricao || containerValor || node);
         if (!botoesReacao.length && !reacaoPorIcone) return;
 
-        const cooldown = core.reaction.canReactNow();
-        if (!cooldown.ok) {
-            log(`[Kakera] Reação em cooldown por ${Math.ceil(cooldown.restanteMs / 60000)} min, ignorando.`);
-            return;
-        }
-
-        if (messageId) state.embedsProcessados.add(messageId);
-        if (!messageId && containerValor?.dataset) containerValor.dataset.kakeraProcessed = "1";
-        log(`Valor do kakera detectado: ${valor}`);
-
         let botaoParaClicar = null;
         let motivoReacao = "";
         let reacaoEspecial = false;
 
         if (reacaoPorIcone) {
+            const cooldown = core.reaction.canReactNow();
+            if (!cooldown.ok) {
+                log(`[Kakera] Reação em cooldown por ${Math.ceil(cooldown.restanteMs / 60000)} min, ignorando.`);
+                return;
+            }
             botaoParaClicar = reacaoPorIcone.botao;
             const emojiNome = reacaoPorIcone.emojiNome || "ícone especial";
             motivoReacao = `ícone especial (${emojiNome})`;
             reacaoEspecial = true;
         }
+
+        if (messageId) state.embedsProcessados.add(messageId);
+        if (!messageId && containerValor?.dataset) containerValor.dataset.kakeraProcessed = "1";
+        log(`Valor do kakera detectado: ${valor}`);
 
         if (!reacaoEspecial) {
             const agora = new Date();

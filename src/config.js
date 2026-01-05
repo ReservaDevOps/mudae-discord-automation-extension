@@ -6,7 +6,6 @@
         nickname: "reservadevops.com.br",
         kakeraEmojiId: "469835869059153940",
         kakeraAltoLimite: 100,
-        kakeraConfirmacaoGif: "https://tenor.com/view/ladr%C3%A3o-gif-22153661",
         tuIntervalBaseMin: 60,
         tuIntervalJitterMin: 3,
         tuIntervalJitterMax: 8,

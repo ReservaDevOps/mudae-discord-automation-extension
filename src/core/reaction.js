@@ -75,18 +75,6 @@
         return { ok: true, restanteMs: 0 };
     };
 
-    const sendKakeraConfirmGif = () => {
-        const gifUrl = config.kakeraConfirmacaoGif;
-        if (typeof gifUrl !== "string" || gifUrl.trim().length === 0) return false;
-        const enviado = DA.adapters.actions.sendCommand(gifUrl);
-        if (enviado) {
-            log("[Kakera] Gif de confirmação enviado.");
-        } else {
-            log("[Kakera] Falha ao enviar gif de confirmação.");
-        }
-        return enviado;
-    };
-
     const detectConfirmation = (texto) => {
         if (!config.nickname) return;
 
@@ -108,10 +96,6 @@
             if (atualizado && state.reacaoPendente) {
                 clearRetry("cooldown de reação");
             }
-        }
-
-        if (confirmouKakera) {
-            sendKakeraConfirmGif();
         }
 
         if (confirmouClaim) {
