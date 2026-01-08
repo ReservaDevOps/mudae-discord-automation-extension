@@ -41,10 +41,12 @@
             return;
         }
         if (core.claim.isPreClaim(status, agora) && tempo && Number.isFinite(tempo.ms)) {
-            if (tempo.ms <= 1000) {
+            const resetPrevistoEm = state.preClaimSession?.resetPrevistoEm || core.clock.getNextClaimReset(agora);
+            const delayMs = Math.max(resetPrevistoEm.getTime() - agora.getTime(), 0);
+            if (delayMs <= 1000) {
                 core.claim.executeClaimCandidate(candidato);
             } else {
-                core.claim.schedulePendingClaim(candidato, tempo.ms, "aguardando reset");
+                core.claim.schedulePendingClaim(candidato, delayMs, "aguardando reset");
             }
             return;
         }

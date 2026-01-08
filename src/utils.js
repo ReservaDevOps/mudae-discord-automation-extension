@@ -1,7 +1,12 @@
 (() => {
     const DA = (globalThis.DiscordAutomation = globalThis.DiscordAutomation || {});
 
-    const log = (...args) => console.log("[Discord Automação]", ...args);
+    const log = (...args) => {
+        const agora = new Date();
+        const mm = String(agora.getMinutes()).padStart(2, "0");
+        const ss = String(agora.getSeconds()).padStart(2, "0");
+        console.log(`[Discord Automação ${mm}:${ss}]`, ...args);
+    };
 
     const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
