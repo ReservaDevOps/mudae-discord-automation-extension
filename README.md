@@ -6,6 +6,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - `$wa`: rola personagens; os rolls resetam a cada 1h.
 - Claim: pode ser usado a cada ~3h; gastar cedo demais impede usar nos dois próximos resets de rolls.
 - `$tu`: mostra status (rolls restantes, claim disponível ou tempo de espera, cooldown de reação, estoque de kakera, etc.) e serve de gatilho para decisões.
+- `$rt`: reseta o timer do claim quando disponível (aparece na mensagem do `$tu`).
 - Estratégia de pré-claim: caso esteja sem claim, é possível roletar ~30s antes do reset e gastar o claim assim que virar o minuto do reset. Limites típicos: 300ka (pré-claim), 200ka (1a hora após reset), 100ka (2a e 3a horas).
 
 ## O que a extensão faz
@@ -13,6 +14,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - Agenda `$tu` periodicamente para acompanhar rolls/claim (base de 60min + jitter).
 - Quando o `$tu` mostra claim disponível e rolls > 0, enfileira e envia `$wa` em sequência com atraso curto.
 - Detecta kakera em embeds e reage automaticamente quando o valor ultrapassa o limite configurado (dependente de claim) ou quando há um ícone especial de reação (diferente de ❤️). Ícones especiais ignoram a disponibilidade do claim. Em sessões de rolagem, aplica um debounce para escolher o maior valor antes de reagir. Mantém retentativas de clique por ~9s para garantir a reação.
+- Quando `resetClaimTimerEnabled` está ativo e `$rt` está disponível no `$tu`, permite rolar mesmo sem claim e usa `$rt` para resetar o claim se aparecer kakera acima do limite da hora 1.
 - Monitora mensagens de confirmação de claim/kakera para encerrar retentativas de clique e mensagens de cooldown de reação (`You can't react to kakera for ...`) para evitar reações repetidas até o tempo expirar.
 - Respeita uma janela de operação (padrão 06:00–00:00). Fora dela, não envia comandos e pausa filas até reabrir.
 - Implementa sessões de pré-claim: agenda o início ~30s antes do reset do claim (minuto configurado), aplica limites por fase (pré-claim/1a/2a/3a hora) e encerra após a janela de 3min ou quando o claim fica disponível. Se houver candidato, o claim pode ser agendado para o momento do reset.
@@ -32,6 +34,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - `rollSessionIdleMs`: tempo de ociosidade para encerrar uma sessão de rolagem após o último roll.
 - `rollsResetEnabled`, `rollsResetCommand`, `rollsResetWindowMinutes`: controle do reset de rolls via `$rolls` quando o claim está disponível na última hora.
 - `rollsResetTimeoutMs`, `rollsResetTuDelayMs`: timeout do reset e atraso para solicitar `$tu` após a confirmação.
+- `resetClaimTimerEnabled`: habilita o uso do `$rt` quando disponível no `$tu` para resetar o claim em kakera acima do limite da hora 1.
 - `preClaimOffsetMs`: quanto antes do reset iniciar a sessão de pré-claim.
 - `preClaimJanelaMs`: duração máxima da sessão de pré-claim.
 

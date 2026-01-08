@@ -28,6 +28,7 @@
             reactCooldownMinutes: null,
             powerPercent: null,
             stockKakera: null,
+            rtAvailable: false,
             nextDailyMinutes: null,
             nextDkMinutes: null,
             nextVoteMinutes: null
@@ -65,6 +66,8 @@
 
         const voteMatch = normalized.match(/you may vote again in\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
         status.nextVoteMinutes = minutosDeMatch(voteMatch);
+
+        status.rtAvailable = /\$rt\s+is\s+available/i.test(normalized);
 
         if (status.rollsLeft === null && status.claimAvailable === null) return null;
         return status;

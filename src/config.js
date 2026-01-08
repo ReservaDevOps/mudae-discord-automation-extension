@@ -17,7 +17,7 @@
         claimResetIntervalHours: 3,
         claimResetAnchorHour: 14,
         claimLimits: {
-            preClaim: 300,
+            preClaim: 200,
             hour1: 200,
             hour2: 150,
             hour3: 100
@@ -29,6 +29,7 @@
         rollsResetWindowMinutes: 60,
         rollsResetTimeoutMs: 120000,
         rollsResetTuDelayMs: 4000,
+        resetClaimTimerEnabled: true,
         preClaimOffsetMs: 30000,
         preClaimJanelaMs: 180000
     };

@@ -33,6 +33,13 @@
             core.claim.executeClaimCandidate(candidato);
             return;
         }
+        if (candidato.usaResetClaimTimer) {
+            const ok = core.claim.executeClaimWithReset(candidato);
+            if (!ok) {
+                log("[Rolagem] Claim com $rt indisponível ao finalizar.");
+            }
+            return;
+        }
         if (core.claim.isPreClaim(status, agora) && tempo && Number.isFinite(tempo.ms)) {
             if (tempo.ms <= 1000) {
                 core.claim.executeClaimCandidate(candidato);
@@ -110,10 +117,14 @@
             sessao.candidato = candidato;
             log(`[Rolagem] Candidato atualizado: ${candidato.motivo}.`);
             if (state.ultimoTuStatus?.claimAvailable !== true && core.claim.isPreClaim(state.ultimoTuStatus, new Date())) {
-                const agoraMs = Date.now();
-                const resetPrevistoEm = state.preClaimSession?.resetPrevistoEm || core.clock.getNextClaimReset(new Date());
-                const delayMs = Math.max(resetPrevistoEm.getTime() - agoraMs, 0);
-                core.claim.schedulePendingClaim(candidato, delayMs, "aguardando reset");
+                if (candidato.usaResetClaimTimer) {
+                    core.claim.clearPendingClaim("reset claim timer");
+                } else {
+                    const agoraMs = Date.now();
+                    const resetPrevistoEm = state.preClaimSession?.resetPrevistoEm || core.clock.getNextClaimReset(new Date());
+                    const delayMs = Math.max(resetPrevistoEm.getTime() - agoraMs, 0);
+                    core.claim.schedulePendingClaim(candidato, delayMs, "aguardando reset");
+                }
             }
             return true;
         }

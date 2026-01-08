@@ -45,14 +45,17 @@
         core.claim.schedulePreClaimSession(status);
         core.rollsReset.evaluate(status);
 
-        if (status.claimAvailable && status.rollsLeft && status.rollsLeft > 0) {
+        const resetClaimTimerAtivo = config.resetClaimTimerEnabled === true && status.rtAvailable === true;
+        if ((status.claimAvailable || resetClaimTimerAtivo) && Number.isFinite(status.rollsLeft) && status.rollsLeft > 0) {
             state.waQueue = Math.max(state.waQueue, status.rollsLeft);
-            log(`[WA] Enfilei ${status.rollsLeft} comandos $wa (fila agora: ${state.waQueue}).`);
+            const origem = status.claimAvailable ? "claim OK" : "$rt disponível";
+            log(`[WA] Enfilei ${status.rollsLeft} comandos $wa (${origem}, fila agora: ${state.waQueue}).`);
             processWaQueue();
         } else {
             const claimMsg = status.claimAvailable ? "claim OK" : "claim bloqueado";
             const rollsMsg = typeof status.rollsLeft === "number" ? `rolls=${status.rollsLeft}` : "rolls=n/d";
-            log(`[WA] Nenhuma ação: ${claimMsg}, ${rollsMsg}.`);
+            const rtMsg = status.rtAvailable ? "$rt=ok" : "$rt=n/d";
+            log(`[WA] Nenhuma ação: ${claimMsg}, ${rollsMsg}, ${rtMsg}.`);
         }
     };
 
@@ -104,6 +107,9 @@
                 return;
             }
             core.rollSession.updateSessionEvent("envio");
+            if (typeof state.ultimoTuStatus?.rollsLeft === "number") {
+                state.ultimoTuStatus.rollsLeft = Math.max(state.ultimoTuStatus.rollsLeft - 1, 0);
+            }
             state.waQueue -= 1;
             log(`[WA] Comando $wa enviado. Restam ${state.waQueue}.`);
             if (state.waQueue <= 0) {

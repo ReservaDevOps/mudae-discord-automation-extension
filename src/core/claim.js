@@ -17,6 +17,25 @@
         };
     };
 
+    const getResetClaimTimerConfig = () => ({
+        enabled: config.resetClaimTimerEnabled === true,
+        command: "$rt",
+        delayMs: 1200
+    });
+
+    const canResetClaimTimer = (status) => {
+        const cfg = getResetClaimTimerConfig();
+        if (!cfg.enabled) return { ok: false, motivo: "config desativada", cfg };
+        if (!status?.rtAvailable) return { ok: false, motivo: "$rt indisponível", cfg };
+        return { ok: true, motivo: "ok", cfg };
+    };
+
+    const consumeResetClaimTimer = () => {
+        if (state.ultimoTuStatus) {
+            state.ultimoTuStatus.rtAvailable = false;
+        }
+    };
+
     const isPreClaim = (status, agora = new Date()) => {
         if (state.preClaimSession?.ativa) return true;
         if (status?.claimAvailable !== false) return false;
@@ -57,6 +76,27 @@
         candidato.botao.click();
         log(`[Rolagem] Claim selecionado: ${candidato.motivo}.`);
         core.reaction.startRetry(candidato.botao, candidato.motivo);
+    };
+
+    const executeClaimWithReset = (candidato) => {
+        if (!candidato?.botao) return false;
+        const check = canResetClaimTimer(state.ultimoTuStatus);
+        if (!check.ok) {
+            log(`[Claim] Reset indisponível (${check.motivo}).`);
+            return false;
+        }
+        const { command, delayMs } = check.cfg;
+        const enviado = DA.adapters?.actions?.sendCommand(command);
+        if (!enviado) {
+            log(`[Claim] Falha ao enviar ${command}, abortando.`);
+            return false;
+        }
+        consumeResetClaimTimer();
+        clearPendingClaim("reset claim timer");
+        endPreClaimSession("reset claim timer");
+        log(`[Claim] ${command} enviado, reagindo em ${(delayMs / 1000).toFixed(1)}s.`);
+        setTimeout(() => executeClaimCandidate(candidato), delayMs);
+        return true;
     };
 
     const schedulePendingClaim = (candidato, delayMs, motivo) => {
@@ -148,11 +188,15 @@
 
     core.claim = {
         getClaimLimits,
+        getResetClaimTimerConfig,
+        canResetClaimTimer,
+        consumeResetClaimTimer,
         isPreClaim,
         canAttemptClaim,
         clearPendingClaim,
         schedulePendingClaim,
         executeClaimCandidate,
+        executeClaimWithReset,
         endPreClaimSession,
         cancelPreClaimSchedule,
         startPreClaimSession,
