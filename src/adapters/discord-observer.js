@@ -59,9 +59,11 @@
         if (!reacaoEspecial) {
             const agora = new Date();
             const status = state.ultimoTuStatus;
+            const sessao = state.rollSession;
+            const emNossaSessao = sessao?.ativa === true;
             const podeClaim = core.claim.canAttemptClaim(status, agora);
             const resetCheck = core.claim.canResetClaimTimer(status);
-            const podeUsarReset = resetCheck.ok && status?.claimAvailable !== true && !state.reacaoPendente;
+            const podeUsarReset = emNossaSessao && resetCheck.ok && status?.claimAvailable !== true && !state.reacaoPendente;
 
             if (!podeClaim.ok && !podeUsarReset) {
                 log(`[Kakera] Claim indisponível (${podeClaim.motivo}), ignorando reação.`);
@@ -87,7 +89,6 @@
                 }
             }
 
-            const sessao = state.rollSession;
             const fallbackAtivo = sessao?.ativa && sessao.forceClaimFallback === true;
             if (fallbackAtivo && podeClaim.ok && botoesReacao.length === 1) {
                 core.rollSession.registerFallbackCandidate({
