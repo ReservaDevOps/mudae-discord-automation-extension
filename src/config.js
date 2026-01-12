@@ -11,7 +11,7 @@
         tuIntervalJitterMax: 8,
         tuRetryMs: 30000,
         waDelayMs: 1200,
-        horarioInicio: "06:00",
+        horarioInicio: "00:00",
         horarioFim: "00:00",
         claimResetMinute: 55,
         claimResetIntervalHours: 3,

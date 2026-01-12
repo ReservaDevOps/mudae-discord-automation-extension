@@ -44,6 +44,10 @@
         core.clock.updateClaimResetAgenda(new Date());
         core.claim.schedulePreClaimSession(status);
         core.rollsReset.evaluate(status);
+        if (core.rollsReset.consumeFinalRound(status)) {
+            state.forceClaimFallbackNextSession = true;
+            log("[WA] Ultima rodada apos $rolls: claim sera usado no maior valor se nenhum passar do limite.");
+        }
 
         const resetClaimTimerAtivo = config.resetClaimTimerEnabled === true && status.rtAvailable === true;
         if ((status.claimAvailable || resetClaimTimerAtivo) && Number.isFinite(status.rollsLeft) && status.rollsLeft > 0) {
@@ -78,7 +82,9 @@
 
         state.processandoWa = true;
         log(`[WA] Iniciando processamento da fila (${state.waQueue} itens).`);
-        core.rollSession.startSession("fila-wa");
+        const forceFallback = state.forceClaimFallbackNextSession === true;
+        core.rollSession.startSession("fila-wa", { forceClaimFallback: forceFallback });
+        if (forceFallback) state.forceClaimFallbackNextSession = false;
 
         const proximo = () => {
             if (state.waQueue <= 0) {

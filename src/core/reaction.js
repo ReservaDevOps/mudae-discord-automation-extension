@@ -113,6 +113,7 @@
             core.rollSession.cancelSession("claim confirmado");
             core.claim.clearPendingClaim("claim confirmado");
             core.rollsReset.clearPending("claim confirmado");
+            core.rollsReset.clearFinalRound("claim confirmado");
             core.claim.schedulePreClaimSession(state.ultimoTuStatus);
             log(`[Claim] Confirmado via mensagem. Cooldown estimado: ${cooldownMin ?? "n/d"} min.`);
         }

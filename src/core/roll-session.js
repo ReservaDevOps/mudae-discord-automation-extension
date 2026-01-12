@@ -23,34 +23,49 @@
         const sessao = state.rollSession;
         if (!sessao?.ativa) return;
         const candidato = sessao.candidato;
+        const fallback = sessao.candidatoFallback;
+        const forceFallback = sessao.forceClaimFallback === true;
         clearSession();
         log(`[Rolagem] Sessão encerrada (${motivo}).`);
-        if (!candidato) return;
+
         const agora = new Date();
         const status = state.ultimoTuStatus;
-        const tempo = core.clock.getTimeToClaimReset(status, agora);
-        if (status?.claimAvailable === true) {
-            core.claim.executeClaimCandidate(candidato);
-            return;
-        }
-        if (candidato.usaResetClaimTimer) {
-            const ok = core.claim.executeClaimWithReset(candidato);
-            if (!ok) {
-                log("[Rolagem] Claim com $rt indisponível ao finalizar.");
-            }
-            return;
-        }
-        if (core.claim.isPreClaim(status, agora) && tempo && Number.isFinite(tempo.ms)) {
-            const resetPrevistoEm = state.preClaimSession?.resetPrevistoEm || core.clock.getNextClaimReset(agora);
-            const delayMs = Math.max(resetPrevistoEm.getTime() - agora.getTime(), 0);
-            if (delayMs <= 1000) {
+
+        if (candidato) {
+            const tempo = core.clock.getTimeToClaimReset(status, agora);
+            if (status?.claimAvailable === true) {
                 core.claim.executeClaimCandidate(candidato);
-            } else {
-                core.claim.schedulePendingClaim(candidato, delayMs, "aguardando reset");
+                return;
             }
+            if (candidato.usaResetClaimTimer) {
+                const ok = core.claim.executeClaimWithReset(candidato);
+                if (!ok) {
+                    log("[Rolagem] Claim com $rt indisponível ao finalizar.");
+                }
+                return;
+            }
+            if (core.claim.isPreClaim(status, agora) && tempo && Number.isFinite(tempo.ms)) {
+                const resetPrevistoEm = state.preClaimSession?.resetPrevistoEm || core.clock.getNextClaimReset(agora);
+                const delayMs = Math.max(resetPrevistoEm.getTime() - agora.getTime(), 0);
+                if (delayMs <= 1000) {
+                    core.claim.executeClaimCandidate(candidato);
+                } else {
+                    core.claim.schedulePendingClaim(candidato, delayMs, "aguardando reset");
+                }
+                return;
+            }
+            log("[Rolagem] Claim indisponível ao finalizar.");
             return;
         }
-        log("[Rolagem] Claim indisponível ao finalizar.");
+
+        if (forceFallback && fallback) {
+            if (status?.claimAvailable === true) {
+                log(`[Rolagem] Nenhum candidato acima do limite; usando fallback (${fallback.valor}).`);
+                core.claim.executeClaimCandidate(fallback);
+            } else {
+                log("[Rolagem] Fallback ignorado: claim indisponivel.");
+            }
+        }
     };
 
     const scheduleSessionEnd = () => {
@@ -74,11 +89,18 @@
         }, cfg.idleMs);
     };
 
-    const startSession = (origem = "desconhecida") => {
-        if (state.rollSession?.ativa) return;
+    const startSession = (origem = "desconhecida", options = {}) => {
+        if (state.rollSession?.ativa) {
+            if (options.forceClaimFallback === true) {
+                state.rollSession.forceClaimFallback = true;
+                log(`[Rolagem] Sessao existente marcada para fallback (${origem}).`);
+            }
+            return;
+        }
         const agora = Date.now();
         const cfg = getRollSessionConfig();
         const timeoutId = setTimeout(() => finalizeSession("debounce expirado"), cfg.debounceMs);
+        const forceClaimFallback = options.forceClaimFallback === true;
         state.rollSession = {
             ativa: true,
             origem,
@@ -89,9 +111,12 @@
             ultimoRollEm: null,
             idleTimeoutId: null,
             timeoutId,
-            candidato: null
+            candidato: null,
+            candidatoFallback: null,
+            forceClaimFallback
         };
-        log(`[Rolagem] Sessão iniciada (${origem}). Debounce ${(cfg.debounceMs / 1000).toFixed(0)}s.`);
+        const infoFallback = forceClaimFallback ? " Fallback ativo." : "";
+        log(`[Rolagem] Sessão iniciada (${origem}). Debounce ${(cfg.debounceMs / 1000).toFixed(0)}s.${infoFallback}`);
     };
 
     const updateSessionEvent = (tipo) => {
@@ -133,12 +158,28 @@
         return false;
     };
 
+    const registerFallbackCandidate = (candidato) => {
+        const sessao = state.rollSession;
+        if (!sessao?.ativa || !sessao.forceClaimFallback) return false;
+        if (!candidato) return false;
+        const atual = sessao.candidatoFallback;
+        const scoreNovo = Number.isFinite(candidato.score) ? candidato.score : candidato.valor;
+        const scoreAtual = Number.isFinite(atual?.score) ? atual.score : atual?.valor;
+        if (!atual || scoreNovo > scoreAtual) {
+            sessao.candidatoFallback = candidato;
+            log(`[Rolagem] Fallback atualizado: ${candidato.motivo}.`);
+            return true;
+        }
+        return false;
+    };
+
     core.rollSession = {
         startSession,
         updateSessionEvent,
         scheduleSessionEnd,
         cancelSession,
         finalizeSession,
-        registerClaimCandidate
+        registerClaimCandidate,
+        registerFallbackCandidate
     };
 })();

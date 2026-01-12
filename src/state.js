@@ -19,6 +19,8 @@
         claimResetAgenda: null,
         rollSession: null,
         claimPendente: null,
-        rollsResetPendente: null
+        rollsResetPendente: null,
+        rollsResetFinalRound: null,
+        forceClaimFallbackNextSession: false
     };
 })();

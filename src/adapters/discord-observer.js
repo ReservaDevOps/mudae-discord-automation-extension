@@ -86,6 +86,19 @@
                     log("Ignorando kakera alto: múltiplos botões de reação encontrados.");
                 }
             }
+
+            const sessao = state.rollSession;
+            const fallbackAtivo = sessao?.ativa && sessao.forceClaimFallback === true;
+            if (fallbackAtivo && podeClaim.ok && botoesReacao.length === 1) {
+                core.rollSession.registerFallbackCandidate({
+                    botao: botoesReacao[0],
+                    valor,
+                    score: valor,
+                    motivo: `fallback ultima rodada (${valor})`,
+                    criadoEm: Date.now(),
+                    usaResetClaimTimer: false
+                });
+            }
         }
 
         if (botaoParaClicar) {

@@ -33,9 +33,32 @@
         };
     };
 
+    const markFinalRound = () => {
+        state.rollsResetFinalRound = {
+            confirmadoEm: Date.now()
+        };
+    };
+
+    const clearFinalRound = (motivo) => {
+        if (!state.rollsResetFinalRound && !state.forceClaimFallbackNextSession) return;
+        state.rollsResetFinalRound = null;
+        state.forceClaimFallbackNextSession = false;
+        if (motivo) log(`[Rolls] Ultima rodada cancelada (${motivo}).`);
+    };
+
+    const consumeFinalRound = (status) => {
+        if (!state.rollsResetFinalRound) return false;
+        if (status?.claimAvailable !== true) return false;
+        if (typeof status.rollsLeft !== "number" || status.rollsLeft <= 0) return false;
+        state.rollsResetFinalRound = null;
+        log("[Rolls] Ultima rodada confirmada; fallback de claim habilitado.");
+        return true;
+    };
+
     const confirmReset = () => {
         clearPending("confirmado");
         const cfg = getRollsResetConfig();
+        markFinalRound();
         log("[Rolls] Reset confirmado, solicitando $tu para atualizar rolls.");
         core.tu.scheduleTu(cfg.tuDelayMs);
     };
@@ -124,6 +147,9 @@
     core.rollsReset = {
         getRollsResetConfig,
         clearPending,
+        markFinalRound,
+        clearFinalRound,
+        consumeFinalRound,
         startPending,
         confirmReset,
         trackRollsMessage,

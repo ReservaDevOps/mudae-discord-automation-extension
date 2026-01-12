@@ -45,7 +45,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - **Janela de operação**: `isWithinSchedule`, `minutesUntilSchedule` e `describeSchedule` controlam pausas/reagendamentos tanto para `$tu` quanto para a fila de `$wa`.
 - **Pré-claim**: `schedulePreClaimSession`, `startPreClaimSession` e `endPreClaimSession` gerenciam a sessão; `getCurrentKakeraLimit` calcula o limite por fase (pré-claim/1a/2a/3a hora) com base no reset do claim.
 - **Sessão de rolagem**: durante o envio de `$wa`, o código agrupa rolls e aplica debounce (`claimDebounceMs`) para escolher a maior carta antes de reagir.
-- **Reset de rolls**: se o claim estiver disponível e faltarem <= 60 min para o reset, o script pode enviar `$rolls` quando os rolls acabarem e aguardar a confirmação por reação ✅.
+- **Reset de rolls**: se o claim estiver disponível e faltarem <= 60 min para o reset, o script pode enviar `$rolls` quando os rolls acabarem e aguardar a confirmação por reação ✅; na rodada pós-$rolls, se nada passar do limite, usa o claim no maior valor para não perder a janela.
 - **Reação a kakera**: `processKakeraEmbed` lê valor (via `extractKakeraValue`), escolhe botão de reação (`findReactionButtons` / `detectReactionByIcon`), respeita cooldown de reação quando detectado, clica e inicia retentativas (`startRetry`).
 - **Confirmação de reação**: `detectConfirmation` encerra retentativas ao ver mensagens de claim/kakera para o nickname configurado e registra cooldown quando aparece `You can't react to kakera for ...`.
 
