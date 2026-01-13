@@ -26,14 +26,24 @@
             rollsLeft: null,
             nextRollResetMinutes: null,
             reactCooldownMinutes: null,
+            reactAvailable: null,
             powerPercent: null,
+            reactionPowerCostPercent: null,
+            reactionPowerReducedCostPercent: null,
             stockKakera: null,
+            stockSoulPoints: null,
             rtAvailable: false,
+            rtCooldownMinutes: null,
             dailyAvailable: null,
             nextDailyMinutes: null,
             dkAvailable: null,
             nextDkMinutes: null,
-            nextVoteMinutes: null
+            voteAvailable: null,
+            nextVoteMinutes: null,
+            ohLeft: null,
+            ocLeft: null,
+            oqLeft: null,
+            refillMinutes: null
         };
 
         const claimMatch = normalized.match(/you can't claim for another\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
@@ -53,35 +63,91 @@
 
         const reactMatch = normalized.match(/you can't react to kakera for\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
         status.reactCooldownMinutes = minutosDeMatch(reactMatch);
+        if (/you can react to kakera right now/i.test(normalized)) {
+            status.reactAvailable = true;
+            if (status.reactCooldownMinutes === null) status.reactCooldownMinutes = 0;
+        } else if (Number.isFinite(status.reactCooldownMinutes)) {
+            status.reactAvailable = status.reactCooldownMinutes <= 0;
+        }
 
         const powerMatch = normalized.match(/power:\s*(\d+)%/i);
         status.powerPercent = powerMatch ? Number(powerMatch[1]) : null;
+        const reactCostMatch = normalized.match(/each kakera button consumes\s*(\d+)%/i);
+        status.reactionPowerCostPercent = reactCostMatch ? Number(reactCostMatch[1]) : null;
+        const reactReducedMatch = normalized.match(/half the power\s*\((\d+)%\)/i);
+        status.reactionPowerReducedCostPercent = reactReducedMatch ? Number(reactReducedMatch[1]) : null;
 
-        const stockMatch = normalized.match(/stock:\s*([\d.,]+)/i);
-        if (stockMatch) status.stockKakera = Number(stockMatch[1].replace(/[^\d]/g, ""));
-
-        const dailyMatch = normalized.match(/(?:next \$daily reset in|you can use \$daily again in)\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
-        status.nextDailyMinutes = minutosDeMatch(dailyMatch);
-        const dailyAvailableMatch = normalized.match(/\$daily\s+is\s+available|you can use \$daily(?!\s+again in)/i);
-        if (dailyAvailableMatch) {
-            status.dailyAvailable = true;
-        } else if (Number.isFinite(status.nextDailyMinutes)) {
-            status.dailyAvailable = status.nextDailyMinutes <= 0;
+        const stockKakeraMatch = normalized.match(/stock:\s*([\d.,]+)\s*:kakera:/i);
+        if (stockKakeraMatch) {
+            status.stockKakera = Number(stockKakeraMatch[1].replace(/[^\d]/g, ""));
+        } else {
+            const stockMatch = normalized.match(/stock:\s*([\d.,]+)/i);
+            if (stockMatch) status.stockKakera = Number(stockMatch[1].replace(/[^\d]/g, ""));
         }
+        const stockSpMatch = normalized.match(/stock:\s*([\d.,]+)\s*:sp:/i);
+        if (stockSpMatch) status.stockSoulPoints = Number(stockSpMatch[1].replace(/[^\d]/g, ""));
 
-        const dkMatch = normalized.match(/(?:next \$dk in|you can use \$dk again in)\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
-        status.nextDkMinutes = minutosDeMatch(dkMatch);
-        const dkAvailableMatch = normalized.match(/\$dk\s+is\s+available|you can use \$dk(?!\s+again in)/i);
-        if (dkAvailableMatch) {
-            status.dkAvailable = true;
-        } else if (Number.isFinite(status.nextDkMinutes)) {
-            status.dkAvailable = status.nextDkMinutes <= 0;
-        }
+        const parseAvailability = (token) => {
+            const result = { available: null, nextMinutes: null };
+            const availableMatch = normalized.match(
+                new RegExp(
+                    `\\${token}\\s+is\\s+(?:available|ready)|you\\s+(?:can|may)\\s+use\\s+\\${token}(?!\\s+again in)`,
+                    "i"
+                )
+            );
+            if (availableMatch) result.available = true;
 
-        const voteMatch = normalized.match(/you may vote again in\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
+            const timeMatch = normalized.match(
+                new RegExp(
+                    `(?:next\\s+\\${token}(?:\\s+reset)?\\s+in|you\\s+(?:can|may)\\s+use\\s+\\${token}\\s+again\\s+in)\\s+(?:(\\d+)\\s*h\\s*)?(?:(\\d+)\\s*m(?:in(?:ute)?s?)?)?`,
+                    "i"
+                )
+            );
+            if (timeMatch && (timeMatch[1] || timeMatch[2])) {
+                const horas = timeMatch[1] ? Number(timeMatch[1]) : 0;
+                const minutos = timeMatch[2] ? Number(timeMatch[2]) : 0;
+                const total = horas * 60 + minutos;
+                if (Number.isFinite(total)) {
+                    result.nextMinutes = total;
+                    if (result.available !== true) {
+                        result.available = total <= 0;
+                    }
+                }
+            }
+            return result;
+        };
+
+        const dailyInfo = parseAvailability("$daily");
+        status.nextDailyMinutes = dailyInfo.nextMinutes;
+        status.dailyAvailable = dailyInfo.available;
+
+        const dkInfo = parseAvailability("$dk");
+        status.nextDkMinutes = dkInfo.nextMinutes;
+        status.dkAvailable = dkInfo.available;
+
+        const voteMatch = normalized.match(/you (?:may|can) vote again in\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
         status.nextVoteMinutes = minutosDeMatch(voteMatch);
+        if (/you (?:may|can) vote right now/i.test(normalized)) {
+            status.voteAvailable = true;
+        } else if (Number.isFinite(status.nextVoteMinutes)) {
+            status.voteAvailable = status.nextVoteMinutes <= 0;
+        }
 
         status.rtAvailable = /\$rt\s+is\s+available/i.test(normalized);
+        const rtCooldownMatch = normalized.match(/cooldown of \$rt is not over.*?time left:\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
+        status.rtCooldownMinutes = minutosDeMatch(rtCooldownMatch);
+        if (Number.isFinite(status.rtCooldownMinutes) && status.rtCooldownMinutes > 0) {
+            status.rtAvailable = false;
+        }
+
+        const oxMatch = normalized.match(/(\d+)\s+\$oh left for today,\s+(\d+)\s+\$oc\s+and\s+(\d+)\s+\$oq/i);
+        if (oxMatch) {
+            status.ohLeft = Number(oxMatch[1]);
+            status.ocLeft = Number(oxMatch[2]);
+            status.oqLeft = Number(oxMatch[3]);
+        }
+        const refillMatch = normalized.match(/(?:(\d+)h\s+)?(\d+)\s*min before the refill/i);
+        status.refillMinutes = minutosDeMatch(refillMatch);
 
         if (status.rollsLeft === null && status.claimAvailable === null) return null;
         return status;
