@@ -29,7 +29,9 @@
             powerPercent: null,
             stockKakera: null,
             rtAvailable: false,
+            dailyAvailable: null,
             nextDailyMinutes: null,
+            dkAvailable: null,
             nextDkMinutes: null,
             nextVoteMinutes: null
         };
@@ -58,11 +60,23 @@
         const stockMatch = normalized.match(/stock:\s*([\d.,]+)/i);
         if (stockMatch) status.stockKakera = Number(stockMatch[1].replace(/[^\d]/g, ""));
 
-        const dailyMatch = normalized.match(/next \$daily reset in\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
+        const dailyMatch = normalized.match(/(?:next \$daily reset in|you can use \$daily again in)\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
         status.nextDailyMinutes = minutosDeMatch(dailyMatch);
+        const dailyAvailableMatch = normalized.match(/\$daily\s+is\s+available|you can use \$daily(?!\s+again in)/i);
+        if (dailyAvailableMatch) {
+            status.dailyAvailable = true;
+        } else if (Number.isFinite(status.nextDailyMinutes)) {
+            status.dailyAvailable = status.nextDailyMinutes <= 0;
+        }
 
-        const dkMatch = normalized.match(/next \$dk in\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
+        const dkMatch = normalized.match(/(?:next \$dk in|you can use \$dk again in)\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
         status.nextDkMinutes = minutosDeMatch(dkMatch);
+        const dkAvailableMatch = normalized.match(/\$dk\s+is\s+available|you can use \$dk(?!\s+again in)/i);
+        if (dkAvailableMatch) {
+            status.dkAvailable = true;
+        } else if (Number.isFinite(status.nextDkMinutes)) {
+            status.dkAvailable = status.nextDkMinutes <= 0;
+        }
 
         const voteMatch = normalized.match(/you may vote again in\s+(?:(\d+)h\s+)?(\d+)\s*min/i);
         status.nextVoteMinutes = minutosDeMatch(voteMatch);

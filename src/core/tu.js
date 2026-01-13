@@ -1,10 +1,56 @@
 (() => {
     const DA = (globalThis.DiscordAutomation = globalThis.DiscordAutomation || {});
     const { config, state, utils } = DA;
-    const { log, randomInt } = utils;
+    const { log, randomInt, clampInt } = utils;
 
     DA.core = DA.core || {};
     const core = DA.core;
+
+    const getDailyDkConfig = () => ({
+        dailyEnabled: config.dailyEnabled !== false,
+        dkEnabled: config.dkEnabled !== false,
+        dailyCommand: typeof config.dailyCommand === "string" ? config.dailyCommand : "$daily",
+        dkCommand: typeof config.dkCommand === "string" ? config.dkCommand : "$dk",
+        delayMs: clampInt(config.dailyDkDelayMs, 200, 5000, 800)
+    });
+
+    const scheduleDailyDkCommands = (status) => {
+        if (!status) return 0;
+        const cfg = getDailyDkConfig();
+        const comandos = [];
+        if (cfg.dailyEnabled && status.dailyAvailable === true) {
+            comandos.push({ command: cfg.dailyCommand, label: "$daily" });
+        }
+        if (cfg.dkEnabled && status.dkAvailable === true) {
+            comandos.push({ command: cfg.dkCommand, label: "$dk" });
+        }
+        if (!comandos.length) return 0;
+
+        if (!core.clock.isWithinSchedule()) {
+            log("[TU] Fora do horario, ignorando envio de $daily/$dk.");
+            return 0;
+        }
+
+        let delayMs = 0;
+        comandos.forEach((item, index) => {
+            const enviar = () => {
+                const enviado = DA.adapters.actions.sendCommand(item.command);
+                if (enviado) {
+                    log(`[TU] Comando ${item.command} enviado (${item.label} disponível).`);
+                } else {
+                    log(`[TU] Falha ao enviar ${item.command}.`);
+                }
+            };
+            if (index === 0) {
+                enviar();
+            } else {
+                delayMs += cfg.delayMs;
+                setTimeout(enviar, delayMs);
+            }
+        });
+
+        return cfg.delayMs * comandos.length;
+    };
 
     const clearWaitingTu = () => {
         state.esperandoTuResposta = false;
@@ -48,13 +94,19 @@
             state.forceClaimFallbackNextSession = true;
             log("[WA] Ultima rodada apos $rolls: claim sera usado no maior valor se nenhum passar do limite.");
         }
+        const comandosExtrasDelayMs = scheduleDailyDkCommands(status);
 
         const resetClaimTimerAtivo = config.resetClaimTimerEnabled === true && status.rtAvailable === true;
         if ((status.claimAvailable || resetClaimTimerAtivo) && Number.isFinite(status.rollsLeft) && status.rollsLeft > 0) {
             state.waQueue = Math.max(state.waQueue, status.rollsLeft);
             const origem = status.claimAvailable ? "claim OK" : "$rt disponível";
             log(`[WA] Enfilei ${status.rollsLeft} comandos $wa (${origem}, fila agora: ${state.waQueue}).`);
-            processWaQueue();
+            if (comandosExtrasDelayMs > 0) {
+                log(`[WA] Aguardando ${(comandosExtrasDelayMs / 1000).toFixed(1)}s antes de iniciar $wa.`);
+                setTimeout(processWaQueue, comandosExtrasDelayMs);
+            } else {
+                processWaQueue();
+            }
         } else {
             const claimMsg = status.claimAvailable ? "claim OK" : "claim bloqueado";
             const rollsMsg = typeof status.rollsLeft === "number" ? `rolls=${status.rollsLeft}` : "rolls=n/d";

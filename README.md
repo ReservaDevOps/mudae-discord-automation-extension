@@ -12,6 +12,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 ## O que a extensão faz
 - Observa o DOM do Discord Web e processa novas mensagens e embeds do Mudae.
 - Agenda `$tu` periodicamente para acompanhar rolls/claim (base de 60min + jitter).
+- Quando o `$tu` indica `$daily` ou `$dk` disponíveis, envia os comandos automaticamente.
 - Quando o `$tu` mostra claim disponível e rolls > 0, enfileira e envia `$wa` em sequência com atraso curto.
 - Detecta kakera em embeds e reage automaticamente quando o valor ultrapassa o limite configurado (dependente de claim) ou quando há um ícone especial de reação (diferente de ❤️). Ícones especiais ignoram a disponibilidade do claim. Em sessões de rolagem, aplica um debounce para escolher o maior valor antes de reagir. Mantém retentativas de clique por ~9s para garantir a reação.
 - Quando `resetClaimTimerEnabled` está ativo e `$rt` está disponível no `$tu`, permite rolar mesmo sem claim e usa `$rt` para resetar o claim se aparecer kakera acima do limite da hora 1.
@@ -26,6 +27,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - `kakeraAltoLimite`: limite padrão de kakera quando não há contexto de claim.
 - `kakeraConfirmacaoGif`: URL enviada quando uma mensagem de confirmação de kakera é detectada (deixe vazio para desativar).
 - `tuIntervalBaseMin`, `tuIntervalJitterMin`, `tuIntervalJitterMax`, `tuRetryMs`: controle de agendamento e retentativa do `$tu`.
+- `dailyEnabled`, `dkEnabled`, `dailyCommand`, `dkCommand`, `dailyDkDelayMs`: envio automático de `$daily`/`$dk` quando disponíveis.
 - `waDelayMs`: atraso base entre envios sequenciais de `$wa` (adiciona jitter de 150–400ms).
 - `horarioInicio`, `horarioFim`: janela diária de operação (formato HH:MM). Se iguais, fica 24h ativo.
 - `claimResetMinute`, `claimResetIntervalHours`, `claimResetAnchorHour`: configuração do reset de claim (ex.: minuto 55 a cada 3h, ancorado em uma hora conhecida como 14 se o último reset foi 14:55).
