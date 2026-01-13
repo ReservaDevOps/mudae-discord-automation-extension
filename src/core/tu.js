@@ -6,6 +6,15 @@
     DA.core = DA.core || {};
     const core = DA.core;
 
+    const getTuScheduleConfig = () => {
+        const start = clampInt(config.tuWindowStartMinute, 0, 59, 55);
+        const end = clampInt(config.tuWindowEndMinute, 0, 59, 59);
+        return {
+            windowStart: Math.min(start, end),
+            windowEnd: Math.max(start, end)
+        };
+    };
+
     const getDailyDkConfig = () => ({
         dailyEnabled: config.dailyEnabled !== false,
         dkEnabled: config.dkEnabled !== false,
@@ -181,11 +190,35 @@
     };
 
     const calculateNextTuDelay = () => {
-        const base = config.tuIntervalBaseMin * 60 * 1000;
-        const jitterMin = config.tuIntervalJitterMin * 60 * 1000;
-        const jitterMax = config.tuIntervalJitterMax * 60 * 1000;
-        const jitter = randomInt(jitterMin, jitterMax);
-        return base + jitter;
+        const hasWindowConfig =
+            Number.isFinite(Number(config.tuWindowStartMinute)) && Number.isFinite(Number(config.tuWindowEndMinute));
+        if (!hasWindowConfig) {
+            const base = config.tuIntervalBaseMin * 60 * 1000;
+            const jitterMin = config.tuIntervalJitterMin * 60 * 1000;
+            const jitterMax = config.tuIntervalJitterMax * 60 * 1000;
+            const jitter = randomInt(jitterMin, jitterMax);
+            return base + jitter;
+        }
+
+        const { windowStart, windowEnd } = getTuScheduleConfig();
+        const agora = new Date();
+        const agoraMin = agora.getMinutes();
+        const alvoMin = randomInt(windowStart, windowEnd);
+        const alvo = new Date(agora);
+
+        if (agoraMin < windowStart) {
+            alvo.setMinutes(alvoMin, 0, 0);
+        } else {
+            alvo.setHours(alvo.getHours() + 1);
+            alvo.setMinutes(alvoMin, 0, 0);
+        }
+
+        let delayMs = alvo.getTime() - agora.getTime();
+        if (delayMs < 1000) {
+            alvo.setHours(alvo.getHours() + 1);
+            delayMs = alvo.getTime() - agora.getTime();
+        }
+        return delayMs;
     };
 
     const scheduleTu = (delayMs) => {

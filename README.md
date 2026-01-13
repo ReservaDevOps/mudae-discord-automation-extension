@@ -11,7 +11,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 
 ## O que a extensão faz
 - Observa o DOM do Discord Web e processa novas mensagens e embeds do Mudae.
-- Agenda `$tu` periodicamente para acompanhar rolls/claim (base de 60min + jitter).
+- Agenda `$tu` perto do reset de rolls (por padrão entre os minutos 55–59) para acompanhar rolls/claim.
 - Quando o `$tu` indica `$daily` ou `$dk` disponíveis, envia os comandos automaticamente.
 - Quando o `$tu` mostra claim disponível e rolls > 0, enfileira e envia `$wa` em sequência com atraso curto.
 - Detecta kakera em embeds e reage automaticamente quando o valor ultrapassa o limite configurado (dependente de claim) ou quando há um ícone especial de reação (diferente de ❤️). Ícones especiais ignoram a disponibilidade do claim. Em sessões de rolagem, aplica um debounce para escolher o maior valor antes de reagir. Mantém retentativas de clique por ~9s para garantir a reação.
@@ -26,6 +26,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - `kakeraEmojiId`: ID do emoji de kakera para leitura do valor.
 - `kakeraAltoLimite`: limite padrão de kakera quando não há contexto de claim.
 - `kakeraConfirmacaoGif`: URL enviada quando uma mensagem de confirmação de kakera é detectada (deixe vazio para desativar).
+- `tuWindowStartMinute`, `tuWindowEndMinute`: janela de minutos do relógio para disparar o `$tu` (se não definidos, usa `tuIntervalBaseMin` + jitter).
 - `tuIntervalBaseMin`, `tuIntervalJitterMin`, `tuIntervalJitterMax`, `tuRetryMs`: controle de agendamento e retentativa do `$tu`.
 - `dailyEnabled`, `dkEnabled`, `dailyCommand`, `dkCommand`, `dailyDkDelayMs`: envio automático de `$daily`/`$dk` quando disponíveis.
 - `waDelayMs`: atraso base entre envios sequenciais de `$wa` (adiciona jitter de 150–400ms).

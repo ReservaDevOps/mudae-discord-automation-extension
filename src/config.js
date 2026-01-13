@@ -10,6 +10,8 @@
         tuIntervalJitterMin: 3,
         tuIntervalJitterMax: 8,
         tuRetryMs: 30000,
+        tuWindowStartMinute: 55,
+        tuWindowEndMinute: 59,
         dailyEnabled: true,
         dkEnabled: true,
         dailyCommand: "$daily",
