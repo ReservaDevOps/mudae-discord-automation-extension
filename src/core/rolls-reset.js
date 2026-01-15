@@ -29,7 +29,8 @@
         state.rollsResetPendente = {
             sentAt: Date.now(),
             timeoutId,
-            messageId: null
+            messageId: null,
+            tuScheduled: false
         };
     };
 
@@ -56,11 +57,14 @@
     };
 
     const confirmReset = () => {
+        const pendente = state.rollsResetPendente;
         clearPending("confirmado");
         const cfg = getRollsResetConfig();
         markFinalRound();
-        log("[Rolls] Reset confirmado, solicitando $tu para atualizar rolls.");
-        core.tu.scheduleTu(cfg.tuDelayMs);
+        if (!pendente?.tuScheduled) {
+            log("[Rolls] Reset confirmado, solicitando $tu para atualizar rolls.");
+            core.tu.scheduleTu(cfg.tuDelayMs);
+        }
     };
 
     const trackRollsMessage = (node, texto, autor) => {
@@ -116,7 +120,11 @@
         const checkmark =
             container.querySelector('img.emoji[alt="✅"]') ||
             container.querySelector('img.emoji[data-name="✅"]') ||
-            container.querySelector('img.emoji[data-name*="check"]');
+            container.querySelector('img.emoji[data-name*="check"]') ||
+            container.querySelector('div[role="img"][aria-label="✅"]') ||
+            container.querySelector('span[role="img"][aria-label="✅"]') ||
+            container.querySelector('div[role="img"][aria-label*="check"]') ||
+            container.querySelector('span[role="img"][aria-label*="check"]');
 
         if (checkmark) {
             confirmReset();
@@ -141,7 +149,23 @@
         if (enviado) {
             startPending();
             log(`[Rolls] Comando ${cfg.command} enviado (janela <= ${cfg.janelaMin} min).`);
+            core.tu.scheduleTu(cfg.tuDelayMs);
+            if (state.rollsResetPendente) {
+                state.rollsResetPendente.tuScheduled = true;
+            }
         }
+    };
+
+    const settlePendingByStatus = (status) => {
+        const pendente = state.rollsResetPendente;
+        if (!pendente) return false;
+        if (status?.claimAvailable !== true) return false;
+        if (typeof status.rollsLeft !== "number" || status.rollsLeft <= 0) return false;
+
+        clearPending("status atualizado");
+        markFinalRound();
+        log("[Rolls] Reset inferido via $tu; ultima rodada marcada.");
+        return true;
     };
 
     core.rollsReset = {
@@ -154,6 +178,7 @@
         confirmReset,
         trackRollsMessage,
         detectRollsConfirmation,
-        evaluate
+        evaluate,
+        settlePendingByStatus
     };
 })();

@@ -35,7 +35,7 @@
         rollsResetCommand: "$rolls",
         rollsResetWindowMinutes: 60,
         rollsResetTimeoutMs: 120000,
-        rollsResetTuDelayMs: 4000,
+        rollsResetTuDelayMs: 2000,
         resetClaimTimerEnabled: true,
         preClaimOffsetMs: 30000,
         preClaimJanelaMs: 180000

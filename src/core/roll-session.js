@@ -65,6 +65,11 @@
             } else {
                 log("[Rolagem] Fallback ignorado: claim indisponivel.");
             }
+            return;
+        }
+
+        if (!candidato && !forceFallback) {
+            core.rollsReset.evaluate(status);
         }
     };
 

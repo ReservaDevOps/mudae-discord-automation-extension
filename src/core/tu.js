@@ -99,6 +99,7 @@
         core.clock.updateClaimResetAgenda(new Date());
         core.claim.schedulePreClaimSession(status);
         core.rollsReset.evaluate(status);
+        core.rollsReset.settlePendingByStatus(status);
         if (core.rollsReset.consumeFinalRound(status)) {
             state.forceClaimFallbackNextSession = true;
             log("[WA] Ultima rodada apos $rolls: claim sera usado no maior valor se nenhum passar do limite.");
