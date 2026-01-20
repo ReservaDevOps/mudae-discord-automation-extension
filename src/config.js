@@ -24,11 +24,12 @@
         claimResetIntervalHours: 3,
         claimResetAnchorHour: 14,
         claimLimits: {
-            preClaim: 200,
+            preClaim: 250,
             hour1: 200,
             hour2: 150,
             hour3: 100
         },
+        limiteRt: 300,
         claimDebounceMs: 45000,
         rollSessionIdleMs: 3500,
         rollsResetEnabled: true,

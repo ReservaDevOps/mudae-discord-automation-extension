@@ -33,6 +33,7 @@ Extensão de conteúdo (Manifest v3) para o Discord Web que automatiza interaç�
 - `horarioInicio`, `horarioFim`: janela diária de operação (formato HH:MM). Se iguais, fica 24h ativo.
 - `claimResetMinute`, `claimResetIntervalHours`, `claimResetAnchorHour`: configuração do reset de claim (ex.: minuto 55 a cada 3h, ancorado em uma hora conhecida como 14 se o último reset foi 14:55).
 - `claimLimits`: limites por fase (`preClaim`, `hour1`, `hour2`, `hour3`).
+- `limiteRt`: limite de kakera para usar `$rt` quando disponível (fallback para `claimLimits.hour1`).
 - `claimDebounceMs`: janela máxima para selecionar o melhor claim dentro de uma sessão de rolagem.
 - `rollSessionIdleMs`: tempo de ociosidade para encerrar uma sessão de rolagem após o último roll.
 - `rollsResetEnabled`, `rollsResetCommand`, `rollsResetWindowMinutes`: controle do reset de rolls via `$rolls` quando o claim está disponível na última hora.

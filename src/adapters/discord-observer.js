@@ -71,7 +71,7 @@
             }
 
             const limites = core.claim.getClaimLimits();
-            const limiteRt = limites.hour1;
+            const limiteRt = Number.isFinite(Number(config.limiteRt)) ? Number(config.limiteRt) : limites.hour1;
             const { limite: limiteKakeraAtual, fase } = core.policies.getCurrentKakeraLimit();
             const limiteKakera = podeUsarReset ? limiteRt : limiteKakeraAtual;
             const faseInfo = podeUsarReset ? ", limite hora-1" : fase ? `, fase ${fase}` : "";
