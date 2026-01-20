@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Discord Automação Exemplo",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Extensão de exemplo para ler mensagens no Discord Web.",
   "permissions": [],
   "host_permissions": [
